@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
     qcur: document.getElementById('qcur'),
     prog: document.getElementById('prog'),
     qtext: document.getElementById('qtext'),
+    btnReadAloud: document.getElementById('btn-read-aloud'),
     opts: document.getElementById('opts'),
     btnPrev: document.getElementById('btn-prev'),
     btnNext: document.getElementById('btn-next'),
@@ -131,6 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const goTo = (n) => {
     if (n < 0 || n >= state.session.length) return;
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     state.cur = n;
     renderQ();
   };
@@ -147,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const submitQuiz = () => {
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
     clearInterval(state.timerInv);
     const qCount = state.session.length;
     let correct = 0, wrong = 0, unanswered = 0;
@@ -248,7 +251,24 @@ document.addEventListener('DOMContentLoaded', () => {
     renderRev(f);
   };
 
+  const readAloud = () => {
+    if (!window.speechSynthesis) {
+      alert("Your browser does not support text-to-speech.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const q = state.session[state.cur];
+    let text = q.q + ". ";
+    const keys = ['A', 'B', 'C', 'D'];
+    keys.forEach(k => {
+      if (q.o[k]) text += `Option ${k}: ${q.o[k]}. `;
+    });
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  };
+
   // Event Listeners
+  els.btnReadAloud.addEventListener('click', readAloud);
   document.getElementById('btn-start').addEventListener('click', startQuiz);
   els.btnPrev.addEventListener('click', () => goTo(state.cur - 1));
   els.btnNext.addEventListener('click', () => goTo(state.cur + 1));
